@@ -551,7 +551,7 @@ void SVR_SemiclipOption()
 	}
 	else
 	{
-		if (!strcasecmp(argv, "time"))
+		if (!strcasecmp(argv, "time") || !strcasecmp(argv, "semiclip"))
 		{
 			if (g_Config.GetTime()) {
 				g_ReGameHookchains->CSGameRules_OnRoundFreezeEnd()->registerHook(&CSGameRules_OnRoundFreezeEnd, HC_PRIORITY_DEFAULT + 1);
@@ -575,6 +575,10 @@ void SVR_SemiclipOption()
 				g_ReGameHookchains->CBasePlayer_Spawn()->unregisterHook(&CBasePlayer_Spawn);
 				g_ReGameHookchains->CBasePlayer_Spawn()->registerHook(&CBasePlayer_Spawn, HC_PRIORITY_DEFAULT + 1);
 				g_ReGameHookchains->CSGameRules_OnRoundFreezeEnd()->unregisterHook(&CSGameRules_OnRoundFreezeEnd);
+				g_ReGameHookchains->CBasePlayer_TraceAttack()->unregisterHook(&CBasePlayer_TraceAttack);
+
+				if (g_Config.GetPenetFire())
+					g_ReGameHookchains->CBasePlayer_TraceAttack()->registerHook(&CBasePlayer_TraceAttack, HC_PRIORITY_DEFAULT + 1);
 
 				g_pFunctionTable->pfnPM_Move = PM_Move;
 				g_pNewFunctionTable->pfnShouldCollide = ShouldCollide;
