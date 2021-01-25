@@ -28,24 +28,50 @@
 
 #pragma once
 
-#include "../game_shared/GameEvent.h"
-#include "../game_shared/bot/bot_util.h"
-#include "../game_shared/bot/simple_state_machine.h"
-#include "../game_shared/steam_util.h"
-#include "../game_shared/counter.h"
-#include "../game_shared/bot/bot_manager.h"
-#include "../game_shared/bot/bot_constants.h"
-#include "../game_shared/bot/bot.h"
-#include "../game_shared/shared_util.h"
-#include "../game_shared/bot/bot_profile.h"
+class CBaseEntity;
+class CCSEntity
+{
+	DECLARE_CLASS_TYPES(CCSEntity, CCSEntity);
+public:
+	CCSEntity() :
+		m_pContainingEntity(nullptr)
+	{
+	}
 
-#include "../game_shared/bot/improv.h"
-#include "../game_shared/bot/nav.h"
-#include "../game_shared/bot/nav_node.h"
-#include "../game_shared/bot/nav_area.h"
-#include "../game_shared/bot/nav_path.h"
+	virtual ~CCSEntity() {}
+	virtual void FireBullets(int iShots, Vector &vecSrc, Vector &vecDirShooting, Vector &vecSpread, float flDistance, int iBulletType, int iTracerFreq, int iDamage, entvars_t *pevAttacker) = 0;
+	virtual Vector FireBullets3(Vector &vecSrc, Vector &vecDirShooting, float vecSpread, float flDistance, int iPenetration, int iBulletType, int iDamage, float flRangeModifier, entvars_t *pevAttacker, bool bPistol, int shared_rand) = 0;
 
-#include "../dlls/hostage/hostage.h"
-#include "../dlls/hostage/hostage_localnav.h"
+public:
+	CBaseEntity *m_pContainingEntity;
+};
 
-#include "../dlls/bot/cs_bot.h"
+class CCSDelay: public CCSEntity
+{
+	DECLARE_CLASS_TYPES(CCSDelay, CCSEntity);
+public:
+
+};
+
+class CCSAnimating: public CCSDelay
+{
+	DECLARE_CLASS_TYPES(CCSAnimating, CCSDelay);
+public:
+
+};
+
+class CCSToggle: public CCSAnimating
+{
+	DECLARE_CLASS_TYPES(CCSToggle, CCSAnimating);
+public:
+
+};
+
+class CCSMonster: public CCSToggle
+{
+	DECLARE_CLASS_TYPES(CCSMonster, CCSToggle);
+public:
+
+};
+
+#define CSENTITY_API_INTERFACE_VERSION "CSENTITY_API_INTERFACE_VERSION001"

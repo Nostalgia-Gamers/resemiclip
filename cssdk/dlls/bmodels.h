@@ -27,26 +27,41 @@
 */
 #pragma once
 
-#define SF_PENDULUM_SWING	2		// spawnflag that makes a pendulum a rope swing.
+// func_rotating
+#define SF_BRUSH_ROTATE_Y_AXIS          0
+#define SF_BRUSH_ROTATE_INSTANT         1
+#define SF_BRUSH_ROTATE_BACKWARDS       2
+#define SF_BRUSH_ROTATE_Z_AXIS          4
+#define SF_BRUSH_ROTATE_X_AXIS          8
 
-#define SF_BRUSH_ACCDCC		16		// brush should accelerate and decelerate when toggled
-#define SF_BRUSH_HURT		32		// rotating brush that inflicts pain based on rotation speed
-#define SF_ROTATING_NOT_SOLID	64		// some special rotating objects are not solid.
+#define SF_BRUSH_ACCDCC                 16 // brush should accelerate and decelerate when toggled
+#define SF_BRUSH_HURT                   32 // rotating brush that inflicts pain based on rotation speed
 
-#define SF_WALL_START_OFF	0x0001
+#define SF_ROTATING_NOT_SOLID           64 // some special rotating objects are not solid.
 
-#define SF_CONVEYOR_VISUAL	0x0001
-#define SF_CONVEYOR_NOTSOLID	0x0002
+#define SF_BRUSH_ROTATE_SMALLRADIUS     128
+#define SF_BRUSH_ROTATE_MEDIUMRADIUS    256
+#define SF_BRUSH_ROTATE_LARGERADIUS     512
 
-#define SF_WORLD_DARK		0x0001		// Fade from black at startup
-#define SF_WORLD_TITLE		0x0002		// Display game title at startup
-#define SF_WORLD_FORCETEAM	0x0004		// Force teams
+#define FANPITCHMIN                     30
+#define FANPITCHMAX                     100
 
-#define FANPITCHMIN		30
-#define FANPITCHMAX		100
+// func_pendulum
+#define SF_PENDULUM_SWING               2  // spawnflag that makes a pendulum a rope swing.
+#define SF_PENDULUM_AUTO_RETURN         16
+#define SF_PENDULUM_PASSABLE            32
+
+// func_wall_toggle
+#define SF_WALL_START_OFF               0x0001
+
+// func_conveyor
+#define SF_CONVEYOR_VISUAL              0x0001
+#define SF_CONVEYOR_NOTSOLID            0x0002
 
 // This is just a solid wall if not inhibited
-class CFuncWall: public CBaseEntity {
+class CFuncWall: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CFuncWall, CBaseEntity);
 public:
 	virtual void Spawn() = 0;
 
@@ -55,20 +70,26 @@ public:
 	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
 };
 
-class CFuncWallToggle: public CFuncWall {
+class CFuncWallToggle: public CFuncWall
+{
+	DECLARE_CLASS_TYPES(CFuncWallToggle, CFuncWall);
 public:
 	virtual void Spawn() = 0;
 	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
 };
 
-class CFuncConveyor: public CFuncWall {
+class CFuncConveyor: public CFuncWall
+{
+	DECLARE_CLASS_TYPES(CFuncConveyor, CFuncWall);
 public:
 	virtual void Spawn() = 0;
 	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
 };
 
 // A simple entity that looks solid but lets you walk through it.
-class CFuncIllusionary: public CBaseToggle {
+class CFuncIllusionary: public CBaseToggle
+{
+	DECLARE_CLASS_TYPES(CFuncIllusionary, CBaseToggle);
 public:
 	virtual void Spawn() = 0;
 	virtual void KeyValue(KeyValueData *pkvd) = 0;
@@ -82,7 +103,9 @@ public:
 //
 // otherwise it will be invisible and not solid.  This can be used to keep
 // specific monsters out of certain areas
-class CFuncMonsterClip: public CFuncWall {
+class CFuncMonsterClip: public CFuncWall
+{
+	DECLARE_CLASS_TYPES(CFuncMonsterClip, CFuncWall);
 public:
 	virtual void Spawn() = 0;
 
@@ -90,11 +113,14 @@ public:
 	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
 };
 
-class CFuncRotating: public CBaseEntity {
+class CFuncRotating: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CFuncRotating, CBaseEntity);
 public:
 	// basic functions
 	virtual void Spawn() = 0;
 	virtual void Precache() = 0;
+	virtual void Restart() = 0;
 	virtual void KeyValue(KeyValueData *pkvd) = 0;
 	virtual int Save(CSave &save) = 0;
 	virtual int Restore(CRestore &restore) = 0;
@@ -107,9 +133,13 @@ public:
 	float m_flVolume;
 	float m_pitch;
 	int m_sounds;
+
+	Vector m_angles;
 };
 
-class CPendulum: public CBaseEntity {
+class CPendulum: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CPendulum, CBaseEntity);
 public:
 	virtual void Spawn() = 0;
 	virtual void KeyValue(KeyValueData *pkvd) = 0;

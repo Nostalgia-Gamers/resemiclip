@@ -25,8 +25,10 @@
 *   version.
 *
 */
+
 #pragma once
 
+#include "weapons.h"
 #include "pm_materials.h"
 #include "hintmessage.h"
 #include "unisignals.h"
@@ -271,20 +273,26 @@ enum MusicState { SILENT, CALM, INTENSE };
 
 class CCSPlayer;
 
-class CStripWeapons: public CPointEntity {
+class CStripWeapons: public CPointEntity
+{
+	DECLARE_CLASS_TYPES(CStripWeapons, CPointEntity);
 public:
 	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value) = 0;
 };
 
 // Multiplayer intermission spots.
-class CInfoIntermission: public CPointEntity {
+class CInfoIntermission: public CPointEntity
+{
+	DECLARE_CLASS_TYPES(CInfoIntermission, CPointEntity);
 public:
 	virtual void Spawn() = 0;
 	virtual void Think() = 0;
 };
 
 // Dead HEV suit prop
-class CDeadHEV: public CBaseMonster {
+class CDeadHEV: public CBaseMonster
+{
+	DECLARE_CLASS_TYPES(CDeadHEV, CBaseMonster);
 public:
 	virtual void Spawn() = 0;
 	virtual void KeyValue(KeyValueData *pkvd) = 0;
@@ -294,17 +302,23 @@ public:
 	static char *m_szPoses[4];
 };
 
-class CSprayCan: public CBaseEntity {
+class CSprayCan: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CSprayCan, CBaseEntity);
 public:
 	virtual void Think() = 0;
 	virtual int ObjectCaps() = 0;
 };
 
-class CBloodSplat: public CBaseEntity {
+class CBloodSplat: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CBloodSplat, CBaseEntity);
 public:
 };
 
-class CBasePlayer: public CBaseMonster {
+class CBasePlayer: public CBaseMonster
+{
+	DECLARE_CLASS_TYPES(CBasePlayer, CBaseMonster);
 public:
 	virtual void Spawn() = 0;
 	virtual void Precache() = 0;
@@ -363,28 +377,28 @@ public:
 	CCSPlayer *CSPlayer() const;
 
 	// templates
-	template<typename Functor>
-	CBasePlayerItem *ForEachItem(int slot, const Functor &func)
+	template<typename T = CBasePlayerItem, typename Functor>
+	T *ForEachItem(int slot, const Functor &func)
 	{
 		auto item = m_rgpPlayerItems[ slot ];
 		while (item)
 		{
-			if (func(item))
-				return item;
+			if (func(static_cast<T *>(item)))
+				return static_cast<T *>(item);
 
 			item = item->m_pNext;
 		}
 		return nullptr;
 	}
-	template<typename Functor>
-	CBasePlayerItem *ForEachItem(const Functor &func)
+	template<typename T = CBasePlayerItem, typename Functor>
+	T *ForEachItem(const Functor &func)
 	{
 		for (auto item : m_rgpPlayerItems)
 		{
 			while (item)
 			{
-				if (func(item))
-					return item;
+				if (func(static_cast<T *>(item)))
+					return static_cast<T *>(item);
 
 				item = item->m_pNext;
 			}
@@ -582,9 +596,14 @@ public:
 	float m_silentTimestamp;
 	MusicState m_musicState;
 	float m_flLastCommandTime[COMMANDS_TO_TRACK];
+	int m_iLastAccount;
+	int m_iLastClientHealth;
+	float m_tmNextAccountHealthUpdate;
 };
 
-class CWShield: public CBaseEntity {
+class CWShield: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CWShield, CBaseEntity);
 public:
 	virtual void Spawn() = 0;
 	virtual void Touch(CBaseEntity *pOther) = 0;

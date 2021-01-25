@@ -29,8 +29,8 @@
 
 #include "enginecallback.h"
 
-#define eoNullEntity		0	// Testing the three types of "entity" for nullity
-#define iStringNull		0	// Testing strings for nullity
+#define eoNullEntity		0			// Testing the three types of "entity" for nullity
+#define iStringNull			(string_t)0	// Testing strings for nullity
 
 #define cchMapNameMost		32
 
@@ -78,23 +78,6 @@ extern globalvars_t *gpGlobals;
 #define SVC_WEAPONANIM		35
 #define SVC_ROOMTYPE		37
 #define SVC_DIRECTOR		51
-
-// func_rotating
-#define SF_BRUSH_ROTATE_Y_AXIS		0
-#define SF_BRUSH_ROTATE_INSTANT		1
-#define SF_BRUSH_ROTATE_BACKWARDS	2
-#define SF_BRUSH_ROTATE_Z_AXIS		4
-#define SF_BRUSH_ROTATE_X_AXIS		8
-#define SF_PENDULUM_AUTO_RETURN		16
-#define SF_PENDULUM_PASSABLE		32
-
-#define SF_BRUSH_ROTATE_SMALLRADIUS	128
-#define SF_BRUSH_ROTATE_MEDIUMRADIUS	256
-#define SF_BRUSH_ROTATE_LARGERADIUS	512
-
-#define SPAWNFLAG_NOMESSAGE		1
-#define SPAWNFLAG_NOTOUCH		1
-#define SPAWNFLAG_DROIDONLY		4
 
 #define VEC_HULL_MIN_Z		Vector(0, 0, -36)
 #define VEC_DUCK_HULL_MIN_Z	Vector(0, 0, -18)
@@ -146,7 +129,8 @@ inline void MESSAGE_BEGIN(int msg_dest, int msg_type, const float *pOrigin, entv
 inline BOOL FNullEnt(EOFFSET eoffset) { return (eoffset == 0); }
 inline BOOL FNullEnt(entvars_t *pev) { return (pev == NULL || FNullEnt(OFFSET(pev))); }
 inline BOOL FNullEnt(const edict_t *pent) { return (pent == NULL || FNullEnt(OFFSET(pent))); }
-inline BOOL FStringNull(int iString) { return (iString == iStringNull); }
+inline BOOL FStringNull(int iString) { return ((string_t)iString == iStringNull); }
+inline BOOL FStringNull(string_t iString) { return (iString == iStringNull); }
 inline BOOL FStrEq(const char *sz1, const char *sz2) { return (strcmp(sz1, sz2) == 0); }
 inline BOOL FClassnameIs(entvars_t *pev, const char *szClassname) { return FStrEq(STRING(pev->classname), szClassname); }
 inline BOOL FClassnameIs(edict_t *pent, const char *szClassname) { return FStrEq(STRING(VARS(pent)->classname), szClassname); }

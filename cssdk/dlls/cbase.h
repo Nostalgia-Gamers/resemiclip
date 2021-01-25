@@ -25,9 +25,11 @@
 *    version.
 *
 */
+
 #pragma once
 
 #include "util.h"
+#include "schedule.h"
 #include "monsterevent.h"
 
 class CSave;
@@ -39,7 +41,14 @@ class CBasePlayerItem;
 class CSquadMonster;
 class CCSEntity;
 
-class CBaseEntity {
+#define DECLARE_CLASS_TYPES(className, baseClassName)\
+public:                                              \
+	using BaseClass = baseClassName;                 \
+	using ThisClass = className;                     \
+
+class CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CBaseEntity, CBaseEntity);
 public:
 	// Constructor.  Set engine to use C/C++ callback functions
 	// pointers to engine data
@@ -110,6 +119,31 @@ public:
 	void (CBaseEntity::*m_pfnUse)(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 	void (CBaseEntity::*m_pfnBlocked)(CBaseEntity *pOther);
 
+	void EXT_FUNC DLLEXPORT SUB_Think();
+	void EXT_FUNC DLLEXPORT SUB_Touch(CBaseEntity *pOther);
+	void EXT_FUNC DLLEXPORT SUB_Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+	void EXT_FUNC DLLEXPORT SUB_Blocked(CBaseEntity *pOther);
+
+	using thinkfn_t = decltype(m_pfnThink);
+	template <typename T>
+	void SetThink(void (T::*pfn)());
+	void SetThink(std::nullptr_t);
+
+	using touchfn_t = decltype(m_pfnTouch);
+	template <typename T>
+	void SetTouch(void (T::*pfn)(CBaseEntity *pOther));
+	void SetTouch(std::nullptr_t);
+
+	using usefn_t = decltype(m_pfnUse);
+	template <typename T>
+	void SetUse(void (T::*pfn)(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value));
+	void SetUse(std::nullptr_t);
+
+	using blockedfn_t = decltype(m_pfnBlocked);
+	template <typename T>
+	void SetBlocked(void (T::*pfn)(CBaseEntity *pOther));
+	void SetBlocked(std::nullptr_t);
+
 	virtual void Think() = 0;
 	virtual void Touch(CBaseEntity *pOther) = 0;
 	virtual void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType = USE_OFF, float value = 0.0f) = 0;
@@ -172,15 +206,65 @@ public:
 	bool has_disconnected;
 };
 
-class CPointEntity: public CBaseEntity {
+// Inlines
+inline BOOL FNullEnt(CBaseEntity *ent) { return (ent == NULL || FNullEnt(ent->edict())); }
+
+template <typename T>
+inline void CBaseEntity::SetThink(void (T::*pfn)())
+{
+	m_pfnThink = static_cast<thinkfn_t>(pfn);
+}
+
+inline void CBaseEntity::SetThink(std::nullptr_t)
+{
+	m_pfnThink = nullptr;
+}
+
+template <typename T>
+inline void CBaseEntity::SetTouch(void (T::*pfn)(CBaseEntity *pOther))
+{
+	m_pfnTouch = static_cast<touchfn_t>(pfn);
+}
+
+inline void CBaseEntity::SetTouch(std::nullptr_t)
+{
+	m_pfnTouch = nullptr;
+}
+
+template <typename T>
+inline void CBaseEntity::SetUse(void (T::*pfn)(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value))
+{
+	m_pfnUse = static_cast<usefn_t>(pfn);
+}
+
+inline void CBaseEntity::SetUse(std::nullptr_t)
+{
+	m_pfnUse = nullptr;
+}
+
+template <typename T>
+inline void CBaseEntity::SetBlocked(void (T::*pfn)(CBaseEntity *pOther))
+{
+	m_pfnBlocked = static_cast<blockedfn_t>(pfn);
+}
+
+inline void CBaseEntity::SetBlocked(std::nullptr_t)
+{
+	m_pfnBlocked = nullptr;
+}
+
+class CPointEntity: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CPointEntity, CBaseEntity);
 public:
 	virtual void Spawn() = 0;
 	virtual int ObjectCaps() = 0;
 };
 
-
 // generic Delay entity
-class CBaseDelay: public CBaseEntity {
+class CBaseDelay: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CBaseDelay, CBaseEntity);
 public:
 	virtual void KeyValue(KeyValueData *pkvd) = 0;
 	virtual int Save(CSave &save) = 0;
@@ -190,7 +274,9 @@ public:
 	int m_iszKillTarget;
 };
 
-class CBaseAnimating: public CBaseDelay {
+class CBaseAnimating: public CBaseDelay
+{
+	DECLARE_CLASS_TYPES(CBaseAnimating, CBaseDelay);
 public:
 	virtual int Save(CSave &save) = 0;
 	virtual int Restore(CRestore &restore) = 0;
@@ -223,13 +309,17 @@ private:
 };
 
 // generic Toggle entity.
-class CBaseToggle: public CBaseAnimating {
+class CBaseToggle: public CBaseAnimating
+{
+	DECLARE_CLASS_TYPES(CBaseToggle, CBaseAnimating);
 public:
 	virtual void KeyValue(KeyValueData *pkvd) = 0;
 	virtual int Save(CSave &save) = 0;
 	virtual int Restore(CRestore &restore) = 0;
 	virtual int GetToggleState() = 0;
 	virtual float GetDelay() = 0;
+
+	void EXT_FUNC DLLEXPORT SUB_MoveDone();
 public:
 	TOGGLE_STATE m_toggle_state;
 	float m_flActivateFinished;	// like attack_finished, but for doors
@@ -248,24 +338,42 @@ public:
 	float m_flHeight;
 	EHANDLE m_hActivator;
 	void (CBaseToggle::*m_pfnCallWhenMoveDone)();
+
+	using movedonefn_t = decltype(m_pfnCallWhenMoveDone);
+	template <typename T>
+	void SetMoveDone(void (T::*pfn)());
+	void SetMoveDone(std::nullptr_t);
+
 	Vector m_vecFinalDest;
 	Vector m_vecFinalAngle;
 
 	int m_bitsDamageInflict;	// DMG_ damage type that the door or tigger does
 
-	string_t m_sMaster;		// If this button has a master switch, this is the targetname.
-						// A master switch must be of the multisource type. If all
-						// of the switches in the multisource have been triggered, then
-						// the button will be allowed to operate. Otherwise, it will be
-						// deactivated.
+	string_t m_sMaster;			// If this button has a master switch, this is the targetname.
+								// A master switch must be of the multisource type. If all
+								// of the switches in the multisource have been triggered, then
+								// the button will be allowed to operate. Otherwise, it will be
+								// deactivated.
 };
 
+template <typename T>
+inline void CBaseToggle::SetMoveDone(void (T::*pfn)())
+{
+	m_pfnCallWhenMoveDone = static_cast<movedonefn_t>(pfn);
+}
+
+inline void CBaseToggle::SetMoveDone(std::nullptr_t)
+{
+	m_pfnCallWhenMoveDone = nullptr;
+}
+
 #include "basemonster.h"
-#include "weapons.h"
 #include "player.h"
 
 // Generic Button
-class CBaseButton: public CBaseToggle {
+class CBaseButton: public CBaseToggle
+{
+	DECLARE_CLASS_TYPES(CBaseButton, CBaseToggle);
 public:
 	virtual void Spawn() = 0;
 	virtual void Precache() = 0;
@@ -297,7 +405,9 @@ public:
 #define MAX_MULTI_TARGETS	16	// maximum number of targets a single multi_manager entity may be assigned.
 #define MS_MAX_TARGETS		32
 
-class CMultiSource: public CPointEntity {
+class CMultiSource: public CPointEntity
+{
+	DECLARE_CLASS_TYPES(CMultiSource, CPointEntity);
 public:
 	virtual void Spawn() = 0;
 	virtual void Restart() = 0;
@@ -315,8 +425,14 @@ public:
 	string_t m_globalstate;
 };
 
+#define SF_WORLD_DARK       0x0001 // Fade from black at startup
+#define SF_WORLD_TITLE      0x0002 // Display game title at startup
+#define SF_WORLD_FORCETEAM  0x0004 // Force teams
+
 // This spawns first when each level begins.
-class CWorld: public CBaseEntity {
+class CWorld: public CBaseEntity
+{
+	DECLARE_CLASS_TYPES(CWorld, CBaseEntity);
 public:
 	virtual void Spawn() = 0;
 	virtual void Precache() = 0;
